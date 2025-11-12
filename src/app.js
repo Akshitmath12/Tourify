@@ -74,13 +74,13 @@ app.use(cors({
 
     // Unhandled routes
 
-    app.all('*', (req, res, next) => {
-        next(new AppError(`Can't find ${req.originalUrl} on the server`));
-    })
+    app.use((req, res, next) => {
+        next(new AppError(`Can't find ${req.originalUrl}`, 404));
+      });
 
     // Global Error Handling Middleware
 
-    app.use(globalErrorHandler);
+    // app.use(globalErrorHandler);
 
     module.exports = app;
 
