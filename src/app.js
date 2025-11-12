@@ -69,6 +69,12 @@ app.use(cors({
     app.use('/api/v1/users', userRouter);
     app.use('/api/v1/tours', tourRouter);
     app.use('api/v1/reviews', reviewRouter);
+
+    app.post(
+      '/webhook-checkout',
+      express.raw({ type: 'application/json' }),
+      bookingController.webhookCheckout
+    );
     app.use('api/v1/bookings', bookingRouter);
 
 
