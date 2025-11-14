@@ -2,17 +2,28 @@ const Review = require('../models/reviewModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
-exports.setTourUserIds = (req, res, next) =>{
-   if(!req.body.tour) req.tour.body = req.params.tourId;
-   if(!req.body.user) req.body.user = req.user.id;
-
-   next();
-}
+exports.setTourUserIds = (req, res, next) => {
+    console.log(
+      'setTourUserIds -> req.body:',
+      req.body,
+      'req.params:',
+      req.params,
+      'req.user:',
+      req.user
+    );
+  
+    if (!req.body) req.body = {};
+    if (!req.body.tour) req.body.tour = req.params.tourId;
+    if (!req.body.user) req.body.user = req.user.id;
+  
+    next();
+  };
+  
 
 exports.createReview = catchAsync(async (req, res, next) =>{
     const newReview = await Review.create(req.body);
     res.status(201).json({
-        status: success,
+        status: 'success',
         data: {review: newReview}
     })
 })

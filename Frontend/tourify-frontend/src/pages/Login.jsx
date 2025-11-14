@@ -13,11 +13,24 @@ export default function Login() {
     e.preventDefault();
 
     try {
-      const res = await axios.post("/users/login", { email, password });
+      const res = await axios.post(
+        "/users/login",
+        { email, password },
+        { withCredentials: true }   // VERY IMPORTANT
+      );
 
-      login(res.data.user); // update auth context
-      navigate("/dashboard");
+      const user = res.data.data.user;  // extract user correctly
+
+      login(user);  // store in context
+
+      // If admin → go to admin page
+      if (user.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err) {
+      console.log(err);
       alert(err.response?.data?.message || "Login failed");
     }
   };

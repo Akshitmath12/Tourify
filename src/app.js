@@ -25,10 +25,12 @@ const app = express();
 app.use(helmet()); // Sets security HTTP headers
 
 
-app.use(cors({
-    origin: process.env.FRONTEND_URL,
+app.use(
+  cors({
+    origin: "http://localhost:5175",
     credentials: true
-  }));
+  })
+);
 
 
   if(process.env.NODE_ENV === 'development') {
@@ -49,8 +51,8 @@ app.use(cors({
   app.use(cookieParser())
 
 
-  app.use(mongoSanitize()); // Data sanitization against NoSQL query injection
-  app.use(xss()); // Data sanitization against XSS
+ 
+
 
     app.use(hpp({
 
@@ -68,18 +70,25 @@ app.use(cors({
 
     app.use('/api/v1/users', userRouter);
     app.use('/api/v1/tours', tourRouter);
-    app.use('api/v1/reviews', reviewRouter);
+    app.use('/api/v1/reviews', reviewRouter);
 
-    app.post(
-      '/webhook-checkout',
-      express.raw({ type: 'application/json' }),
-      bookingController.webhookCheckout
-    );
+    // app.post(
+    //   '/webhook-checkout',
+    //   express.raw({ type: 'application/json' }),
+    //   bookingController.webhookCheckout
+    // );
     app.use('api/v1/bookings', bookingRouter);
 
+    app.get('/', (req, res) => {
+      res.status(200).json({
+        status: 'success',
+        message: 'Tourify API is running 🚀'
+      });
+    });
 
-    // Unhandled routes
-
+    // app.use(mongoSanitize()); // Data sanitization against NoSQL query injection
+    // // Unhandled routes
+    // app.use(xss()); // Data sanitization against XSS
     app.use((req, res, next) => {
         next(new AppError(`Can't find ${req.originalUrl}`, 404));
       });

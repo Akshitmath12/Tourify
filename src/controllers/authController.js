@@ -6,31 +6,38 @@ const crypto = require('crypto');
 const sendEmail = require('../utils/email')
 
 const signToken = (id) => {
+  console.log("JWT_EXPIRES_IN RAW =>", JSON.stringify(process.env.JWT_EXPIRES_IN));
     return jwt.sign({id}, process.env.JWT_SECRET, {
         expiresIn: process.env.JWT_EXPIRES_IN
     })
 }
 
 
-const createSendToken = (user, statusCode, res) =>{
-    const token = signToken(user._id);
+const createSendToken = (user, statusCode, res) => {
+  const token = signToken(user._id);
 
-    const cookieOptions = {
-        expires: new Date(Date.now() + process.env.JWT_EXPIRES_IN * 24 * 60 * 60 * 1000),
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production'
-    }
+  const cookieOptions = {
+    // Use JWT_COOKIE_EXPIRES_IN (numeric)
+    expires: new Date(
+      Date.now() +
+        Number(process.env.JWT_COOKIE_EXPIRES_IN) * 24 * 60 * 60 * 1000
+    ),
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production'
+  };
 
-    res.cookie('jwt', token, cookieOptions)
-    user.password = undefined;
-    res.status(statusCode).json({
-        status: 'success',
-        token,
-        data: {
-            user
-        }
-    })
-}
+  res.cookie('jwt', token, cookieOptions);
+
+  // Remove password from output
+  user.password = undefined;
+
+  res.status(statusCode).json({
+    status: 'success',
+    token,
+    data: { user }
+  });
+};
+
 
 
 exports.signup = catchAsync(async (req, res, next) => {
@@ -49,7 +56,7 @@ exports.signup = catchAsync(async (req, res, next) => {
       return next(new AppError('Please provide email and password!', 400));
   
     const user = await User.findOne({ email }).select('+password');
-    if (!user || !(await user.correctPassword(password, user.password)))
+    if (!user || !(await user.comparePassword(password, user.password)))
       return next(new AppError('Incorrect email or password', 401));
   
     createSendToken(user, 200, res);
@@ -104,8 +111,15 @@ exports.protect = catchAsync(async (req, res, next) => {
   
     // 3. Send it to user's email
     const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${resetToken}`;
-    const message = `Forgot your password? Submit a PATCH request with your new password to: ${resetURL}.\nIf you didn't request it, ignore this email.`;
-  
+    const message = `
+    Forgot your password?
+    
+    Click the link below to reset your password:
+    
+    ${resetURL}
+    
+    If you did NOT request this, please ignore this email.
+    `;
     try {
       await sendEmail({
         email: user.email,
@@ -118,6 +132,7 @@ exports.protect = catchAsync(async (req, res, next) => {
         message: 'Token sent to email!'
       });
     } catch (err) {
+      console.log(err);
       user.passwordResetToken = undefined;
       user.passwordResetExpires = undefined;
       await user.save({ validateBeforeSave: false });
@@ -154,3 +169,7 @@ exports.protect = catchAsync(async (req, res, next) => {
       token
     });
   });
+
+  exports.createSendToken = createSendToken
+
+  //eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5MTViYTI2YTYyZDhhMmVjM2E3OGFlMiIsImlhdCI6MTc2MzAzMTk3NiwiZXhwIjoxNzYzMDMxOTc2fQ.S-VYm0Z2p391GZY_wHddFeoxNvgqXHX22qaiXEt3EZw

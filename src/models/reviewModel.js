@@ -41,6 +41,7 @@ reviewSchema.pre(/^find/, function(next){
         path: 'user',
         select: 'name photo'
     })
+    next();
 })
 
 reviewSchema.index({tour: 1, user: 1}, {unique: true})

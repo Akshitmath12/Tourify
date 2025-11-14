@@ -5,11 +5,11 @@ const authController = require('../controllers/authController');
 
 const router = express.Router();
 
-router.post(
-  '/checkout-session/:tourId',
-  authController.protect,
-  bookingController.getCheckoutSession
-);
+// router.post(
+//   '/checkout-session/:tourId',
+//   authController.protect,
+//   bookingController.getCheckoutSession
+// );
 
 
 router.use(authController.protect, authController.restrictTo('admin', 'lead-guide'));
